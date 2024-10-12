@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import { subscribeUser } from '../controllers/subscriptionController';
-import { check, validationResult } from 'express-validator';
+import { validationResult, check } from 'express-validator';
 import { Router } from 'express';
 import * as subscriptionService from '../services/subscriptionService';
 
