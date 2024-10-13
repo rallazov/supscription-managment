@@ -40,14 +40,15 @@ interface Subscriber {
   email: string;
   subscriptionDate: Date;
   status: 'active' | 'inactive';
+  discountCode: string | null;
 }
 
-const createSubscriber = async (email: string): Promise<void> => {
+const createSubscriber = async (email: string, discountCode: string): Promise<void> => {
   console.log('A. Entering createSubscriber function');
-  const query = 'INSERT INTO subscribers (email, subscriptionDate, status) VALUES ($1, NOW(), $2)';
+  const query = 'INSERT INTO subscribers (email, subscriptionDate, status, discountCode) VALUES ($1, NOW(), $2, $3)';
   try {
     console.log(`B. Attempting to insert email: ${email}`);
-    await pool.query(query, [email, 'active']);
+    await pool.query(query, [email, 'active', discountCode]);
     console.log(`C. Successfully inserted email: ${email}`);
   } catch (error) {
     console.log('D. Caught an error in createSubscriber');
@@ -65,4 +66,10 @@ const createSubscriber = async (email: string): Promise<void> => {
   console.log('H. Exiting createSubscriber function');
 };
 
-export { createSubscriber, pool };
+const getSubscriberByEmail = async (email: string): Promise<Subscriber | null> => {
+  const query = 'SELECT * FROM subscribers WHERE email = $1';
+  const result = await pool.query(query, [email]);
+  return result.rows[0] || null;
+};
+
+export { createSubscriber, getSubscriberByEmail, pool };

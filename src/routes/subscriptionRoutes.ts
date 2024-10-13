@@ -6,28 +6,24 @@ import * as subscriptionService from '../services/subscriptionService';
 
 const router = Router();
 
+// Add this new GET route for fetching all subscriptions
+router.get('/', async (req: Request, res: Response) => {
+  try {
+    const subscriptions = await subscriptionService.getSubscriptions();
+    res.json(subscriptions);
+  } catch (error) {
+    console.error('Error fetching subscriptions:', error);
+    res.status(500).json({ message: 'Error fetching subscriptions' });
+  }
+});
+
+// Keep your existing POST route for subscribing
 router.post(
   '/subscribe',
   [
     check('email').isEmail().withMessage('Invalid email!')
   ],
-  async (req: Request, res: Response) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      res.status(400).json({ errors: errors.array() });
-    } else {
-      await subscribeUser(req, res);
-    }
-  }
+  subscribeUser
 );
-
-router.get('/subscriptions', async (req, res) => {
-  try {
-    const subscriptions = await subscriptionService.getSubscriptions();
-    res.json(subscriptions);
-  } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
 
 export default router;

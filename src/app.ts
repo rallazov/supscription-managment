@@ -5,6 +5,7 @@ import { pool } from './models/subscriberModel';
 import path from 'path';
 import dotenv from 'dotenv';
 import bodyParser from 'body-parser';
+import { failedEmailQueue } from './services/failedEmailQueue';
 
 dotenv.config();
 
@@ -20,24 +21,23 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // Routes
-app.use('/api', subscriptionRoutes); // Adjusted to use `/api` for better API structure
+app.use('/api', subscriptionRoutes);
 
 // Root Route
 app.get('/', (req, res) => {
   res.send('Welcome to the Subscription Management API');
 });
 
-// Add this before starting the server
 const testDatabaseConnection = async () => {
   try {
     const result = await pool.query('SELECT NOW()');
     console.log('Database connection test successful:', result.rows[0]);
   } catch (error) {
     console.error('Database connection test failed:', error);
+    throw error; // Re-throw the error to be caught in startServer
   }
 };
 
-// Modify your server start logic
 const startServer = async () => {
   try {
     await testDatabaseConnection();
@@ -46,8 +46,16 @@ const startServer = async () => {
     });
   } catch (error) {
     console.error('Failed to start server:', error);
+    process.exit(1); // Exit the process if we can't connect to the database
   }
 };
+
+// Process failed emails every 15 minutes
+setInterval(() => {
+  failedEmailQueue.processQueue().catch(error => {
+    console.error('Error processing failed email queue:', error);
+  });
+}, 15 * 60 * 1000);
 
 startServer();
 
