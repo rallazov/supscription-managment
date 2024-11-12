@@ -1,3 +1,5 @@
+// utils/discountCodeGenerator.ts
+
 export const generateDiscountCode = (): string => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let code = '';

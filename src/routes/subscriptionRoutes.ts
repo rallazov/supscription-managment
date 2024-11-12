@@ -1,29 +1,49 @@
-import express, { Request, Response } from 'express';
-import { subscribeUser } from '../controllers/subscriptionController';
-import { validationResult, check } from 'express-validator';
+// src/routes/subscriptionRoutes.ts
+
 import { Router } from 'express';
-import * as subscriptionService from '../services/subscriptionService';
+import { check } from 'express-validator';
+import {
+  subscribeUser,
+  getSubscriptions,
+  getSubscriberById,
+  getSubscriberByEmail,
+  updateSubscriber,
+  deleteSubscriber,
+} from '../controllers/subscriptionController';
 
 const router = Router();
 
-// Add this new GET route for fetching all subscriptions
-router.get('/', async (req: Request, res: Response) => {
-  try {
-    const subscriptions = await subscriptionService.getSubscriptions();
-    res.json(subscriptions);
-  } catch (error) {
-    console.error('Error fetching subscriptions:', error);
-    res.status(500).json({ message: 'Error fetching subscriptions' });
-  }
-});
+// GET all subscribers
+router.get('/subscribers', getSubscriptions);
 
-// Keep your existing POST route for subscribing
+// GET a subscriber by ID
+router.get('/subscribers/:id', getSubscriberById);
+
+// GET a subscriber by email
+router.get('/subscribers/email/:email', getSubscriberByEmail);
+
+// POST route for subscribing a user
 router.post(
   '/subscribe',
   [
-    check('email').isEmail().withMessage('Invalid email!')
+    check('email').isEmail().withMessage('Please provide a valid email address'),
+    // Add more validations as needed
   ],
   subscribeUser
 );
+
+// PUT route for updating a subscriber
+router.put(
+  '/subscribers/:id',
+  [
+    // Add validation checks for the fields that can be updated
+    check('email').optional().isEmail().withMessage('Please provide a valid email address'),
+    check('status').optional().isIn(['active', 'inactive']).withMessage('Invalid status'),
+  ],
+  updateSubscriber
+);
+
+// DELETE route for deleting a subscriber
+router.delete('/subscribers/:id', deleteSubscriber);
 
 export default router;

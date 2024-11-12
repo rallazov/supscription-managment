@@ -1,54 +1,68 @@
-import { createSubscriber, getSubscriberByEmail } from '../models/subscriberModel';
+// services/subscriptionService.ts
+
+import {
+  createSubscriber,
+  getSubscriberByEmail,
+  getAllSubscribers,
+  getSubscriberById,
+  updateSubscriberById,
+  deleteSubscriberById,
+  Subscriber,
+} from '../models/subscriberModel';
 import { generateDiscountCode } from '../utils/discountCodeGenerator';
-import { sendConfirmationEmail } from './emailService';
+import { sendSubscriptionEmail } from './emailService';
+import { EmailAlreadySubscribedError } from '../errors/EmailAlreadySubscribedError';
 import { failedEmailQueue } from './failedEmailQueue';
 
-export const subscribeUserService = async (email: string): Promise<{ message: string, discountCode: string }> => {
+export const subscribeUserService = async (email: string): Promise<{ message: string; discountCode: string }> => {
   console.log(`Attempting to subscribe email: ${email}`);
   const existingSubscriber = await getSubscriberByEmail(email);
-  
+
   if (existingSubscriber) {
     console.log(`Email ${email} is already subscribed`);
-    throw new Error('This email is already subscribed');
+    throw new EmailAlreadySubscribedError();
   }
 
   const discountCode = generateDiscountCode();
   console.log(`Generated discount code for ${email}: ${discountCode}`);
-  
+
   await createSubscriber(email, discountCode);
   console.log(`Successfully created subscriber for ${email}`);
 
-  return { 
-    message: 'Subscription successful.', 
-    discountCode 
+  // Send the confirmation email
+  try {
+    await sendSubscriptionEmail(email, discountCode);
+    console.log(`Confirmation email sent to ${email}`);
+    // Optionally, update the subscriber record to set email_sent to true
+  } catch (error) {
+    console.error(`Failed to send confirmation email to ${email}:`, error);
+    // Handle email sending failure, e.g., add to retry queue
+    failedEmailQueue.addToQueue(email, discountCode);
+  }
+
+  return {
+    message: 'Subscription successful.',
+    discountCode,
   };
 };
 
-export const sendSubscriptionEmail = async (email: string, discountCode: string): Promise<void> => {
-  console.log(`Attempting to send confirmation email to ${email}`);
-  try {
-    await sendConfirmationEmail(email, discountCode);
-    console.log(`Confirmation email successfully sent to ${email}`);
-  } catch (error) {
-    console.error(`Failed to send confirmation email to ${email}:`, error);
-    console.log(`Adding ${email} to failed email queue`);
-    failedEmailQueue.addToQueue(email, discountCode);
-  }
+export const getSubscriptionsService = async (): Promise<Subscriber[]> => {
+  const subscribers = await getAllSubscribers();
+  return subscribers;
 };
 
-// Remove all Express-related code and imports
-
-// Instead, define your service functions here, for example:
-export const getSubscriptions = async () => {
-  // Implementation
+export const getSubscriberByIdService = async (id: number): Promise<Subscriber | null> => {
+  return await getSubscriberById(id);
 };
 
-export const createSubscription = async (data: any) => {
-  // Implementation
+export const getSubscriberByEmailService = async (email: string): Promise<Subscriber | null> => {
+  return await getSubscriberByEmail(email);
 };
 
+export const updateSubscriberService = async (id: number, updateData: Partial<Subscriber>): Promise<Subscriber | null> => {
+  return await updateSubscriberById(id, updateData);
+};
 
-export function subscribeUser(email: any) {
-  throw new Error('Function not implemented.');
-}
-// ... other subscription-related functions
+export const deleteSubscriberService = async (id: number): Promise<boolean> => {
+  return await deleteSubscriberById(id);
+};

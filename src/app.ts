@@ -1,14 +1,14 @@
+// app.ts
+
 import express from 'express';
 import cors from 'cors';
 import subscriptionRoutes from './routes/subscriptionRoutes';
 import { pool } from './models/subscriberModel';
 import path from 'path';
 import dotenv from 'dotenv';
-import bodyParser from 'body-parser';
 import { failedEmailQueue } from './services/failedEmailQueue';
 
 dotenv.config();
-
 
 console.log('Current working directory:', process.cwd());
 console.log('.env file path:', path.resolve(process.cwd(), '.env'));
@@ -18,7 +18,7 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json()); // Use Express's built-in JSON parser
 
 // Routes
 app.use('/api', subscriptionRoutes);
