@@ -1,14 +1,7 @@
 import { Pool, QueryResult } from 'pg';
 import dotenv from 'dotenv';
 
-dotenv.config(); // Ensure environment variables are loaded
-
-console.log('Environment variables:');
-console.log('DB_NAME:', process.env.DB_NAME);
-console.log('DB_USER:', process.env.DB_USER);
-console.log('DB_HOST:', process.env.DB_HOST);
-console.log('DB_PORT:', process.env.DB_PORT);
-// Don't log the password for security reasons
+dotenv.config();
 
 const poolConfig = {
   user: process.env.DB_USER,
@@ -18,22 +11,11 @@ const poolConfig = {
   port: parseInt(process.env.DB_PORT || '5432'),
 };
 
-console.log('Pool configuration:', {
-  ...poolConfig,
-  password: '[REDACTED]' // Don't log the actual password
-});
+// Avoid logging sensitive configuration in production
 
 const pool = new Pool(poolConfig);
 
-// Test the database connection
-pool.connect((err, client, release) => {
-  if (err) {
-    console.error('Error connecting to the database', err.stack);
-  } else {
-    console.log('Successfully connected to the database');
-    release();
-  }
-});
+// Do not open an extra connection on module import; app will test connectivity
 
 interface Subscriber {
   id: number;
