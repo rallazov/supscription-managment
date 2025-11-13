@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: subscription-management-api
+    env: node
+    plan: free
+    autoDeploy: true
+    healthCheckPath: /healthz
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NPM_CONFIG_PRODUCTION
+        value: "false"
+      - key: CORS_ORIGIN
+        sync: false
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "5432"
+      - key: DB_NAME
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+    # Optional: choose a region close to your DB/users (e.g., oregon, frankfurt)
+    # region: oregon
+
